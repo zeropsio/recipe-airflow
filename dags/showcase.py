@@ -21,9 +21,13 @@ def task_2_function(ti):
 with DAG(
         'simple_showcase_dag',
         description='A simple showcase DAG with two dependent tasks.',
-        schedule_interval='* * * * *',  # Cron expression for every minute.
-        start_date=datetime(2024, 6, 20),  # Set to past date for immediate availability.
-        catchup=False  # Don't run for past dates.
+        # Cron expression for every minute.
+        schedule_interval='* * * * *',
+        # Set to past date for immediate availability.
+        start_date=datetime(2024, 6, 20),
+        # Don't run for past dates.
+        catchup=False,
+        is_paused_upon_creation=False,
 ) as dag:
     task_1 = PythonOperator(
         task_id='task_1',
@@ -35,4 +39,5 @@ with DAG(
         python_callable=task_2_function
     )
 
-    task_1 >> task_2  # This means task_2 depends on task_1.
+    # This means task_2 depends on task_1.
+    task_1 >> task_2

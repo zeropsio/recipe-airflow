@@ -19,7 +19,6 @@ zerops:
           cd /var/www
           uv venv
           source .venv/bin/activate
-          python --version
           uv pip install --upgrade pip
           uv pip install "apache-airflow[celery,postgres,redis]==2.10.5" --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.10.5/constraints-3.12.txt"
         - mkdir -p $AIRFLOW_HOME
@@ -40,13 +39,13 @@ zerops:
         - |
           source .venv/bin/activate
           zsc execOnce migrate -- airflow db migrate
-          zsc execOnce create-user -- airflow users create --username admin --firstname Data --lastname Enjoyer --role Admin --email dev@zerops.io --password ${ADMIN_PASSWORD}
+          zsc execOnce create-user -- airflow users create --username admin --firstname Data --lastname Enjoyer --role Admin --email data.enjoyer@email.com --password ${ADMIN_PASSWORD}
         - ./wait-mount.sh
         # FIXME(tikinang): Remove sudo after permissions of shared storage and prepare commands are fixed.
         - sudo mkdir -p $SHARED_DAGS_FOLDER
         # FIXME(tikinang): Remove command after permissions of shared storage and prepare commands are fixed.
         - sudo chown zerops:zerops -R $SHARED_DAGS_FOLDER
-        - rsync -avzh ./dags/ $SHARED_DAGS_FOLDER
+        - rsync -avzh --delete ./dags/ $SHARED_DAGS_FOLDER
       start: zsc noop --silent
 
   - setup: airflowui
@@ -89,12 +88,17 @@ zerops:
           cd /var/www
           uv venv
           source .venv/bin/activate
-          python --version
           uv pip install --upgrade pip
           uv pip install "apache-airflow==2.10.5" --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.10.5/constraints-3.12.txt"
       ports:
         - port: 8080
           httpSupport: true
+      initCommands:
+        - |
+          source .venv/bin/activate
+          zsc execOnce migrate -- airflow db migrate
+          zsc execOnce create-user -- airflow users create --username admin --firstname Data --lastname Enjoyer --role Admin --email data.enjoyer@email.com --password ${ADMIN_PASSWORD}
+        - rsync -avzh --delete ./dags/ $AIRFLOW_HOME/dags
       start: |
         source .venv/bin/activate
-        airflow standalone
+        airflow scheduler

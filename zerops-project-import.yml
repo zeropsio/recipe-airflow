@@ -10,5 +10,7 @@ services:
     verticalAutoscaling:
       minRam: 1
     maxContainers: 1
+    envSecrets:
+      ADMIN_PASSWORD: <@generateRandomString(<12>)>
     buildFromGit: https://github.com/zeropsio/recipe-airflow
     enableSubdomainAccess: true
