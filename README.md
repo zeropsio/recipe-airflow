@@ -11,7 +11,6 @@
 Manually copy the [import yaml](https://github.com/zeropsio/recipe-airflow/blob/main/zerops-project-import.yml) to the import dialog in the Zerops app.
 
 ```yaml
-#yamlPreprocessor=on
 project:
   name: Apache Airflow Standalone
   tags:
@@ -23,8 +22,6 @@ services:
     verticalAutoscaling:
       minRam: 1
     maxContainers: 1
-    envSecrets:
-      ADMIN_PASSWORD: <@generateRandomString(<12>)>
     buildFromGit: https://github.com/zeropsio/recipe-airflow
     enableSubdomainAccess: true
 ```
@@ -38,23 +35,26 @@ For production-ready, high-available setup use [production import yaml](https://
 
 ## Development (Standalone)
 - Standalone mode ([docs](https://airflow.apache.org/docs/apache-airflow/stable/start.html)), not recommended for production usage
-- UI access:
-  - Username: `admin`
-  - Password: `$ADMIN_PASSWORD` generated secret environment variable (visible in GUI)
+- Access details can be found in runtime log, look for logs as the following:
+```text
+standalone | Airflow is ready
+standalone | Login with username: admin  password: *****
+standalone | Airflow Standalone is for development purposes only. Do not use this in production!
+```
 
 ## Production
-- Data are stored in Postgres.
-- Celery executor (running on redis).
-- DAG files are distributed via shared storage (shared mounted volume).
-- Only push to the `airflowdags` service to update your DAG files (either via `zcli push airflowdags` or connect your Git with the `airflowdags` service), other services will use the files located in the mounted volume (using symbolic link to `$AIRFLOW_HOME/dags`).
+- Data are stored in Postgres
+- Celery executor (running on redis)
+- DAG files are distributed via shared storage (shared mounted volume)
+- Only push to the `airflowdags` service to update your DAG files (either via `zcli push airflowdags` or connect your Git with the `airflowdags` service), other services will use the files located in the mounted volume
 - UI access:
   - Username: `admin`
   - Password: `$ADMIN_PASSWORD` generated project environment variable (visible in GUI)
 
 ### Ways To Reduce Cost
-- Change worker count.
-- Decrease scaling resources to minimum.
-- Change database services mode to `NON_HA` (historical data can be lost).
+- Change worker count
+- Decrease scaling resources to minimum
+- Change database services mode to `NON_HA` (historical data can be lost)
 
 <br/>
 <br/>
