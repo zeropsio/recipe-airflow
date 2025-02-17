@@ -1,0 +1,57 @@
+#yamlPreprocessor=on
+project:
+  name: Apache Airflow
+  tags:
+    - zerops-recipe
+    - production
+  envVariables:
+    ADMIN_PASSWORD: <@generateRandomString(<12>)>
+    AIRFLOW__WEBSERVER__SECRET_KEY: <@generateRandomString(<32>)>
+services:
+  - hostname: db
+    priority: 10
+    type: postgresql@16
+    mode: HA
+  - hostname: redis
+    priority: 10
+    type: keydb@6
+    mode: HA
+  - hostname: files
+    priority: 10
+    type: shared-storage
+    mode: NON_HA
+
+  - hostname: airflowdags
+    priority: 5
+    type: python@3.12
+    maxContainers: 1
+    buildFromGit: https://github.com/zeropsio/recipe-airflow
+    mount:
+      - files
+
+  - hostname: airflowui
+    type: python@3.12
+    verticalAutoscaling:
+      minRam: 1
+    maxContainers: 1
+    buildFromGit: https://github.com/zeropsio/recipe-airflow
+    enableSubdomainAccess: true
+    mount:
+      - files
+  - hostname: airflowscheduler
+    type: python@3.12
+    verticalAutoscaling:
+      minRam: 0.5
+    maxContainers: 1
+    buildFromGit: https://github.com/zeropsio/recipe-airflow
+    mount:
+      - files
+  - hostname: airflowworkers
+    type: python@3.12
+    verticalAutoscaling:
+      minRam: 2
+    minContainers: 3
+    maxContainers: 3
+    buildFromGit: https://github.com/zeropsio/recipe-airflow
+    mount:
+      - files

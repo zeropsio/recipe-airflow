@@ -1,0 +1,14 @@
+#yamlPreprocessor=on
+project:
+  name: Apache Airflow Standalone
+  tags:
+    - zerops-recipe
+    - development
+services:
+  - hostname: airflowstandalone
+    type: python@3.12
+    verticalAutoscaling:
+      minRam: 1
+    maxContainers: 1
+    buildFromGit: https://github.com/zeropsio/recipe-airflow
+    enableSubdomainAccess: true
