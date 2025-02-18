@@ -43,6 +43,8 @@ standalone | Airflow Standalone is for development purposes only. Do not use thi
 ```
 
 ## Production
+
+> [!WARNING]  
 - Data are stored in Postgres
 - Celery executor (running on redis)
 - DAG files are distributed via shared storage (shared mounted volume)
