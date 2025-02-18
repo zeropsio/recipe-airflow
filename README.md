@@ -56,6 +56,13 @@ standalone | Airflow Standalone is for development purposes only. Do not use thi
 - Decrease scaling resources to minimum
 - Change database services mode to `NON_HA` (historical data can be lost)
 
+# Running Your Own DAGs
+To use your own data pipelines, simply:
+1. Fork this repository
+2. Deploy the project (or the individual services to an existing project) to Zerops
+3. Replace the insides of `dags` folder with your own pipelines
+4. Push to `airflowdags` service via zCLI or connect the `airflowdags` with the forked repository
+
 <br/>
 <br/>
 
