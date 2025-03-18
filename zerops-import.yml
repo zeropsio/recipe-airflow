@@ -1,0 +1,8 @@
+services:
+  - hostname: airflow
+    type: python@3.12
+    verticalAutoscaling:
+      minRam: 1
+    maxContainers: 1
+    buildFromGit: https://github.com/zeropsio/recipe-airflow@algops
+    enableSubdomainAccess: true

@@ -1,71 +1,63 @@
-# Zerops x Apache Airflow
+# Zerops x Algops x Apache Airflow
 
-[Apache Airflow](https://airflow.apache.org/) is an open-source platform for orchestrating and scheduling complex data pipelines. It allows you to programmatically author, schedule, and monitor workflows as Directed Acyclic Graphs (DAGs).
+## Development (Standalone)
 
-![airflow](https://github.com/zeropsio/recipe-shared-assets/blob/main/covers/svg/cover-airflow.svg)
+Standalone mode ([docs](https://airflow.apache.org/docs/apache-airflow/stable/start.html)), not recommended for production usage.
 
-<br />
+### Setup Steps
+1. Git clone this repository
+```shell
+git clone -b algops https://github.com/zeropsio/recipe-airflow.git
+cd recipe-airflow
+```
 
+2. Install zCLI and login to your Zerops account (see https://docs.zerops.io/references/cli)
 
-## Deploy on Zerops
-Manually copy the [import yaml](https://github.com/zeropsio/recipe-airflow/blob/main/zerops-project-import.yml) to the import dialog in the Zerops app.
-
+3. Import the contents of [zerops-import.yml](zerops-import.yml) to desired project (either create a new one for free or add it to n8n)
+```shell
+# Make sure to select correct project.
+zcli project service-import zerops-import.yml
+```
+Or import the following YAML via GUI:
 ```yaml
-project:
-  name: Apache Airflow Standalone
-  tags:
-    - zerops-recipe
-    - development
 services:
-  - hostname: airflowstandalone
+  - hostname: airflow
     type: python@3.12
     verticalAutoscaling:
       minRam: 1
     maxContainers: 1
-    buildFromGit: https://github.com/zeropsio/recipe-airflow
+    buildFromGit: https://github.com/zeropsio/recipe-airflow@algops
     enableSubdomainAccess: true
 ```
+Now, the Airflow instance should be creating.
 
-For production-ready, high-available setup use [production import yaml](https://github.com/zeropsio/recipe-airflow/blob/main/zerops-project-production-import.yml).
-
-# Recipe Features
-- Apache Airflow version `2.10`
-- Python version `3.12`
-- Showcase DAG file
-
-## Development (Standalone)
-- Standalone mode ([docs](https://airflow.apache.org/docs/apache-airflow/stable/start.html)), not recommended for production usage
-- Access details can be found in runtime log, look for logs as the following:
+4. Access details can be found in runtime log, look for logs as the following:
 ```text
 standalone | Airflow is ready
 standalone | Login with username: admin  password: *****
 standalone | Airflow Standalone is for development purposes only. Do not use this in production!
 ```
 
-## Production
+![img_2.png](img_2.png)
 
-> [!WARNING]  
-- Data are stored in Postgres
-- Celery executor (running on redis)
-- DAG files are distributed via shared storage (shared mounted volume)
-- Only push to the `airflowdags` service to update your DAG files (either via `zcli push airflowdags` or connect your Git with the `airflowdags` service), other services will use the files located in the mounted volume
-- UI access:
-  - Username: `admin`
-  - Password: `$ADMIN_PASSWORD` generated project environment variable (visible in GUI)
+5. Copy the password and visit subdomain URL
 
-### Ways To Reduce Cost
-- Change worker count
-- Decrease scaling resources to minimum
-- Change database services mode to `NON_HA` (historical data can be lost)
+![img.png](img.png)
 
-# Running Your Own DAGs
-To use your own data pipelines, simply:
-1. Fork this repository
-2. Deploy the project (or the individual services to an existing project) to Zerops
-3. Replace the insides of `dags` folder with your own pipelines
-4. Push to `airflowdags` service via zCLI or connect the `airflowdags` with the forked repository
+You should be able to login and use Airflow!
 
-<br/>
-<br/>
+### DAGS Development
+1. Activate zCLI VPN to securely access the Airflow instance (see https://docs.zerops.io/references/vpn)
+```shell
+zcli vpn up
+```
 
-Need help setting your project up? Join [Zerops Discord community](https://discord.com/invite/WDvCZ54).
+2. Make changes in `dags/` and push your DAGS to the instance via rsync
+```shell
+rsync -ar --progress --delete ./dags/ airflow.zerops:/var/www/dags/
+```
+Now, your local dags should be registered by Airflow scheduler instance.
+
+### Notes
+If you need extra python packages or otherwise change you Airflow instance, simply update [zerops.yml](zerops.yml) and run `zcli push airflow`.
+This will create new Airflow instance with given packages installed (you may need to check for password again in the runtime logs though). 

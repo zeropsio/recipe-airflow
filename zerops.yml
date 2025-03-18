@@ -1,74 +1,5 @@
 zerops:
-  - setup: airflow-production-base
-    build:
-      deployFiles:
-        - wait-mount.sh
-    run:
-      os: ubuntu
-      base: python@3.12
-      envVariables:
-        SHARED_DAGS_FOLDER: /mnt/files/dags
-        AIRFLOW_HOME: /var/www/airflow
-        AIRFLOW__CORE__LOAD_EXAMPLES: "False"
-        AIRFLOW__CORE__DAGS_FOLDER: ${SHARED_DAGS_FOLDER}
-        AIRFLOW__CORE__EXECUTOR: CeleryExecutor
-        AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${db_user}:${db_password}@db/db
-        AIRFLOW__CELERY__BROKER_URL: redis://redis:6379/0
-        AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://${db_user}:${db_password}@db/db
-      prepareCommands:
-        - |
-          cd /var/www
-          uv venv
-          source .venv/bin/activate
-          uv pip install --upgrade pip
-          uv pip install "apache-airflow[celery,postgres,redis]==2.10.5" --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.10.5/constraints-3.12.txt"
-      initCommands:
-        - ./wait-mount.sh
-
-  - setup: airflowdags
-    extends: airflow-production-base
-    build:
-      deployFiles:
-        - wait-mount.sh
-        - dags
-    run:
-      initCommands:
-        - |
-          source .venv/bin/activate
-          zsc execOnce migrate -- airflow db migrate
-          zsc execOnce create-user -- airflow users create --username admin --firstname Data --lastname Enjoyer --role Admin --email data.enjoyer@email.com --password ${ADMIN_PASSWORD}
-        - ./wait-mount.sh
-        # FIXME(tikinang): Remove command after permissions of shared storage and prepare commands are fixed, rsync should be enough.
-        - sudo mkdir -p $SHARED_DAGS_FOLDER && sudo chown zerops:zerops -R $SHARED_DAGS_FOLDER
-        - rsync -avzh --delete ./dags/ $SHARED_DAGS_FOLDER
-      start: zsc noop --silent
-
-  - setup: airflowui
-    extends: airflow-production-base
-    run:
-      ports:
-        - port: 8080
-          httpSupport: true
-      start: |
-        source .venv/bin/activate
-        airflow webserver
-
-  - setup: airflowscheduler
-    extends: airflow-production-base
-    run:
-      start: |
-        source .venv/bin/activate
-        airflow scheduler
-
-  - setup: airflowworkers
-    extends: airflow-production-base
-    run:
-      start: |
-        source .venv/bin/activate
-        airflow celery worker
-
-  # STANDALONE
-  - setup: airflowstandalone
+  - setup: airflow
     build:
       deployFiles:
         - dags
@@ -86,6 +17,7 @@ zerops:
           source .venv/bin/activate
           uv pip install --upgrade pip
           uv pip install "apache-airflow==2.10.5" --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.10.5/constraints-3.12.txt"
+        # HERE YOU CAN INSTALL OTHER PIP PACKAGES IF NEEDED
       ports:
         - port: 8080
           httpSupport: true
